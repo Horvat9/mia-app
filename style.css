@@ -1391,4 +1391,31 @@ body.dark #canvas-mappa {
   transition: background 0.2s;
 }
 
+/* Dark mode login */
+body.dark.login-page {
+  background: #0f0f1a;
+}
+
+body.dark .contenitore {
+  background: #1a1a2e;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+}
+
+body.dark .contenitore h1 { color: #e2e8f0; }
+body.dark .contenitore > p { color: #94a3b8; }
+body.dark .form label { color: #cbd5e1; }
+body.dark .form input {
+  background: #0f0f1a;
+  border-color: #2d2d4e;
+  color: #e2e8f0;
+}
+
+/* Bottone flottante per pagine senza header */
+.btn-darkmode-float {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 999;
+}
+
 .btn-darkmode:hover { background: rgba(255,255,255,0.2); }
