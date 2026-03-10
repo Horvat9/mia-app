@@ -14,6 +14,7 @@ const stato = {
 }
 
 let utenteCorrente = null
+let linksCache = [] // memorizza { testo, id } dei link nel capitolo
 
 
 // =============================================
@@ -104,11 +105,20 @@ function apriCapitolo(capitolo) {
 
   document.getElementById("placeholder-scrittura").style.display = "none"
   document.getElementById("editor-attivo").style.display = "flex"
-
   document.getElementById("titolo-capitolo").value = capitolo.titolo
-  document.getElementById("testo-capitolo").value = capitolo.contenuto || ""
-  aggiornaContatore()
 
+  // Popola la cache e converte la sintassi lunga in corta per la visualizzazione
+  linksCache = []
+  const contenuto = (capitolo.contenuto || "").replace(
+    /\[([^\]]+)\]\(cap:([^)]+)\)/g,
+    (match, testo, id) => {
+      linksCache.push({ testo, id })
+      return "[" + testo + "]"
+    }
+  )
+
+  document.getElementById("testo-capitolo").value = contenuto
+  aggiornaContatore()
   caricaCapitoli()
   cambiaSscheda("scrittura")
   caricaImmagini(capitolo.id)
@@ -119,7 +129,13 @@ async function salvaCapitolo() {
   if (!stato.capitoloSelezionato) return
 
   const titolo = document.getElementById("titolo-capitolo").value
-  const contenuto = document.getElementById("testo-capitolo").value
+
+  // Ripristina la sintassi completa [testo](cap:ID) prima di salvare
+  let contenuto = document.getElementById("testo-capitolo").value
+  contenuto = contenuto.replace(/\[([^\]]+)\]/g, (match, testo) => {
+    const cached = linksCache.find(l => l.testo === testo)
+    return cached ? "[" + testo + "](cap:" + cached.id + ")" : match
+  })
 
   mostraSalvataggio("Salvataggio...")
 
@@ -150,7 +166,11 @@ document.getElementById("testo-capitolo").addEventListener("input", function() {
   timeoutSalvataggio = setTimeout(async () => {
     if (!stato.capitoloSelezionato) return
 
-    const contenuto = document.getElementById("testo-capitolo").value
+    let contenuto = document.getElementById("testo-capitolo").value
+    contenuto = contenuto.replace(/\[([^\]]+)\]/g, (match, testo) => {
+      const cached = linksCache.find(l => l.testo === testo)
+      return cached ? "[" + testo + "](cap:" + cached.id + ")" : match
+    })
     const titolo = document.getElementById("titolo-capitolo").value
 
     await client
@@ -159,8 +179,9 @@ document.getElementById("testo-capitolo").addEventListener("input", function() {
       .eq("id", stato.capitoloSelezionato.id)
 
     mostraSalvataggio("💾 Salvato")
+    timeoutSalvataggio = null
     setTimeout(() => mostraSalvataggio(""), 1500)
-  }, 300)
+  }, 800)
 })
 
 document.getElementById("titolo-capitolo").addEventListener("input", function() {
@@ -168,7 +189,11 @@ document.getElementById("titolo-capitolo").addEventListener("input", function() 
   timeoutSalvataggio = setTimeout(async () => {
     if (!stato.capitoloSelezionato) return
 
-    const contenuto = document.getElementById("testo-capitolo").value
+    let contenuto = document.getElementById("testo-capitolo").value
+    contenuto = contenuto.replace(/\[([^\]]+)\]/g, (match, testo) => {
+      const cached = linksCache.find(l => l.testo === testo)
+      return cached ? "[" + testo + "](cap:" + cached.id + ")" : match
+    })
     const titolo = document.getElementById("titolo-capitolo").value
 
     await client
@@ -177,8 +202,9 @@ document.getElementById("titolo-capitolo").addEventListener("input", function() 
       .eq("id", stato.capitoloSelezionato.id)
 
     mostraSalvataggio("💾 Salvato")
+    timeoutSalvataggio = null
     setTimeout(() => mostraSalvataggio(""), 1500)
-  }, 300)
+  }, 800)
 })
 
 
@@ -786,22 +812,18 @@ function inserisciLink(capitolo) {
   const fine = textarea.selectionEnd
   const testoSelezionato = textarea.value.substring(inizio, fine).trim()
 
-  // Se c'è testo selezionato, usalo come etichetta — altrimenti usa il titolo del capitolo
-  const etichetta = testoSelezionato || "➡️ Vai a: " + capitolo.titolo
-  const linkTesto = "[" + etichetta + "](cap:" + capitolo.id + ")"
+  const etichetta = testoSelezionato || "Vai a: " + capitolo.titolo
+  const linkCorto = "[" + etichetta + "]"
+
+  // Salva l'ID in cache
+  linksCache = linksCache.filter(l => l.testo !== etichetta)
+  linksCache.push({ testo: etichetta, id: capitolo.id })
 
   const testoAttuale = textarea.value
-
   if (testoSelezionato) {
-    // Sostituisce il testo selezionato con il link
-    textarea.value = testoAttuale.substring(0, inizio)
-      + linkTesto
-      + testoAttuale.substring(fine)
+    textarea.value = testoAttuale.substring(0, inizio) + linkCorto + testoAttuale.substring(fine)
   } else {
-    // Nessuna selezione — inserisce il link alla posizione del cursore
-    textarea.value = testoAttuale.substring(0, inizio)
-      + "\n" + linkTesto + "\n"
-      + testoAttuale.substring(inizio)
+    textarea.value = testoAttuale.substring(0, inizio) + "\n" + linkCorto + "\n" + testoAttuale.substring(inizio)
   }
 
   aggiornaContatore()
@@ -814,23 +836,19 @@ function renderizzaLink() {
   const anteprima = document.getElementById("anteprima-link")
   if (!anteprima) return
 
-  const regex = /\[([^\]]+)\]\(cap:([^)]+)\)/g
+  const regex = /\[([^\]]+)\]/g
   let match
   const links = []
 
   while ((match = regex.exec(testo)) !== null) {
-    links.push({ testo: match[1], id: match[2] })
+    const cached = linksCache.find(l => l.testo === match[1])
+    if (cached) links.push({ testo: match[1], id: cached.id })
   }
 
   anteprima.innerHTML = ""
-
-  if (links.length === 0) {
-    anteprima.style.display = "none"
-    return
-  }
+  if (links.length === 0) { anteprima.style.display = "none"; return }
 
   anteprima.style.display = "block"
-
   const titolo = document.createElement("p")
   titolo.className = "anteprima-titolo"
   titolo.textContent = "🔗 Link nel capitolo:"
@@ -841,11 +859,7 @@ function renderizzaLink() {
     btn.className = "btn-link-anteprima"
     btn.textContent = link.testo
     btn.addEventListener("click", async () => {
-      const { data } = await client
-        .from("capitoli")
-        .select("*")
-        .eq("id", link.id)
-        .single()
+      const { data } = await client.from("capitoli").select("*").eq("id", link.id).single()
       if (data) apriCapitolo(data)
     })
     anteprima.appendChild(btn)
