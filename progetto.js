@@ -30,6 +30,7 @@ async function init() {
   caricaCapitoli()
   caricaPersonaggi()
   caricaNote()
+  avviaRealtime()
 }
 
 
@@ -1275,6 +1276,70 @@ document.getElementById("btn-export-epub").addEventListener("click", async funct
   a.click()
   URL.revokeObjectURL(url)
 })
+
+// =============================================
+// REALTIME — aggiornamenti in tempo reale
+// =============================================
+function avviaRealtime() {
+  client
+    .channel("modifiche-progetto")
+    .on(
+      "postgres_changes",
+      {
+        event: "*",           // INSERT, UPDATE, DELETE
+        schema: "public",
+        table: "capitoli",
+        filter: "progetto_id=eq." + stato.progettoId
+      },
+      (payload) => {
+        console.log("Modifica capitoli ricevuta:", payload)
+        caricaCapitoli()
+
+        // Se il capitolo aperto è stato modificato da qualcun altro, aggiorna il testo
+        if (
+          stato.capitoloSelezionato &&
+          payload.new?.id === stato.capitoloSelezionato.id &&
+          payload.eventType === "UPDATE"
+        ) {
+          const testoAttuale = document.getElementById("testo-capitolo").value
+          if (testoAttuale !== payload.new.contenuto) {
+            mostraSalvataggio("📡 Aggiornato da un collaboratore")
+            document.getElementById("testo-capitolo").value = payload.new.contenuto || ""
+            document.getElementById("titolo-capitolo").value = payload.new.titolo || ""
+            aggiornaContatore()
+            renderizzaLink()
+            setTimeout(() => mostraSalvataggio(""), 3000)
+          }
+        }
+      }
+    )
+    .on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: "personaggi",
+        filter: "progetto_id=eq." + stato.progettoId
+      },
+      () => caricaPersonaggi()
+    )
+    .on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: "note",
+        filter: "progetto_id=eq." + stato.progettoId
+      },
+      () => caricaNote()
+    )
+    .subscribe((status) => {
+      if (status === "SUBSCRIBED") {
+        mostraSalvataggio("📡 Realtime attivo")
+        setTimeout(() => mostraSalvataggio(""), 2000)
+      }
+    })
+}
 
 // Avvia tutto
 init()
