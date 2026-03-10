@@ -887,7 +887,9 @@ function aggiornaViewer() {
   const viewer = document.getElementById("viewer-capitolo")
   if (!viewer) return
 
+  // Pulisce eventuali (cap:ID) rimasti nel testo prima di renderizzare
   const testo = document.getElementById("testo-capitolo").value
+    .replace(/\]\(cap:[^)]+\)/g, "]")
   viewer.innerHTML = ""
 
   if (!testo.trim()) {
