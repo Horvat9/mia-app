@@ -1419,3 +1419,17 @@ body.dark .form input {
 }
 
 .btn-darkmode:hover { background: rgba(255,255,255,0.2); }
+
+.footer {
+  text-align: center;
+  padding: 32px;
+  color: #bbb;
+  font-size: 13px;
+  margin-top: 40px;
+  border-top: 1px solid #e8e8f0;
+}
+
+.footer strong { color: #4f46e5; }
+
+body.dark .footer { border-top-color: #2d2d4e; color: #4b5563; }
+body.dark .footer strong { color: #818cf8; }
