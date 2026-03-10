@@ -782,13 +782,27 @@ document.getElementById("btn-inserisci-link").addEventListener("click", async fu
 
 function inserisciLink(capitolo) {
   const textarea = document.getElementById("testo-capitolo")
-  const cursore = textarea.selectionStart
-  const linkTesto = "[➡️ Vai a: " + capitolo.titolo + "](cap:" + capitolo.id + ")"
+  const inizio = textarea.selectionStart
+  const fine = textarea.selectionEnd
+  const testoSelezionato = textarea.value.substring(inizio, fine).trim()
+
+  // Se c'è testo selezionato, usalo come etichetta — altrimenti usa il titolo del capitolo
+  const etichetta = testoSelezionato || "➡️ Vai a: " + capitolo.titolo
+  const linkTesto = "[" + etichetta + "](cap:" + capitolo.id + ")"
 
   const testoAttuale = textarea.value
-  textarea.value = testoAttuale.substring(0, cursore)
-    + "\n" + linkTesto + "\n"
-    + testoAttuale.substring(cursore)
+
+  if (testoSelezionato) {
+    // Sostituisce il testo selezionato con il link
+    textarea.value = testoAttuale.substring(0, inizio)
+      + linkTesto
+      + testoAttuale.substring(fine)
+  } else {
+    // Nessuna selezione — inserisce il link alla posizione del cursore
+    textarea.value = testoAttuale.substring(0, inizio)
+      + "\n" + linkTesto + "\n"
+      + testoAttuale.substring(inizio)
+  }
 
   aggiornaContatore()
   renderizzaLink()
