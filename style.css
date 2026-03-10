@@ -379,6 +379,16 @@ input:focus {
   color: #e74c3c;
 }
 
+.badge-condiviso {
+  font-size: 11px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  background: #f0fdf4;
+  color: #16a34a;
+  border: 1px solid #bbf7d0;
+  font-weight: bold;
+}
+
 /* =============================================
    EDITOR LAYOUT
 ============================================= */

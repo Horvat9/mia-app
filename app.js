@@ -21,22 +21,53 @@ async function init() {
 // 2. CARICA TUTTI I PROGETTI DELL'UTENTE
 // =============================================
 async function caricaProgetti() {
-  const { data, error } = await client
+  const { data: { user } } = await client.auth.getUser()
+
+  // Carica i progetti dell'utente
+  const { data: miei, error: err1 } = await client
     .from("progetti")
     .select("*, capitoli(count)")
+    .eq("user_id", user.id)
     .order("creato_il", { ascending: false })
 
-  if (error) { console.log("Errore:", error.message); return }
+  // Carica i progetti dove è collaboratore
+  const { data: collab, error: err2 } = await client
+    .from("collaboratori")
+    .select("*, progetti(*, capitoli(count))")
+    .eq("user_id", user.id)
+
+  if (err1 || err2) { console.log(err1?.message || err2?.message); return }
 
   const lista = document.getElementById("lista-progetti")
   lista.innerHTML = ""
 
-  if (data.length === 0) {
+  // Unisce i due array evitando duplicati
+  const tuttiProgetti = [...(miei || [])]
+
+  collab?.forEach(c => {
+    if (!tuttiProgetti.find(p => p.id === c.progetti.id)) {
+      tuttiProgetti.push({ ...c.progetti, ruolo: c.ruolo })
+    }
+  })
+
+  if (tuttiProgetti.length === 0) {
     lista.innerHTML = "<p class='vuoto'>Nessun progetto ancora. Creane uno! 🚀</p>"
     return
   }
 
-  data.forEach(progetto => lista.appendChild(creaCardProgetto(progetto)))
+  tuttiProgetti.forEach(progetto => {
+    const card = creaCardProgetto(progetto)
+
+    // Se è un progetto condiviso aggiungi un badge
+    if (progetto.ruolo) {
+      const badge = document.createElement("span")
+      badge.className = "badge-condiviso"
+      badge.textContent = progetto.ruolo === "editor" ? "✏️ Condiviso" : "👁️ Sola lettura"
+      card.querySelector(".card-azioni").prepend(badge)
+    }
+
+    lista.appendChild(card)
+  })
 }
 
 // =============================================
