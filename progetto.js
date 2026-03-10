@@ -877,6 +877,8 @@ function creaViewer() {
   viewer.addEventListener("click", function(e) {
     // Se l'utente ha cliccato un link, non aprire la textarea
     if (e.target.classList.contains("link-inline")) return
+    // Pulisce eventuali (cap:ID) visibili nella textarea
+    textarea.value = textarea.value.replace(/\](\(cap:[^)]+\))/g, "]")
     viewer.style.display = "none"
     textarea.style.display = "block"
     textarea.focus()
@@ -1447,7 +1449,16 @@ function avviaRealtime() {
     const textarea = document.getElementById("testo-capitolo")
     const posizione = textarea.selectionStart
 
-    document.getElementById("testo-capitolo").value = payload.new.contenuto || ""
+    // Converte la sintassi lunga in corta prima di mostrare nella textarea
+    linksCache = []
+    const nuovoContenuto = (payload.new.contenuto || "").replace(
+      /\[([^\]]+)\]\(cap:([^)]+)\)/g,
+      (match, testo, id) => {
+        linksCache.push({ testo, id })
+        return "[" + testo + "]"
+      }
+    )
+    document.getElementById("testo-capitolo").value = nuovoContenuto
     document.getElementById("titolo-capitolo").value = payload.new.titolo || ""
 
     // Ripristina la posizione del cursore
