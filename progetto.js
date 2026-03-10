@@ -138,6 +138,49 @@ async function salvaCapitolo() {
   }
 }
 
+// Salvataggio automatico mentre scrivi (300ms dopo l'ultimo tasto)
+let timeoutSalvataggio = null
+
+document.getElementById("testo-capitolo").addEventListener("input", function() {
+  aggiornaContatore()
+  renderizzaLink()
+
+  // Cancella il timer precedente e ne avvia uno nuovo
+  clearTimeout(timeoutSalvataggio)
+  timeoutSalvataggio = setTimeout(async () => {
+    if (!stato.capitoloSelezionato) return
+
+    const contenuto = document.getElementById("testo-capitolo").value
+    const titolo = document.getElementById("titolo-capitolo").value
+
+    await client
+      .from("capitoli")
+      .update({ titolo, contenuto })
+      .eq("id", stato.capitoloSelezionato.id)
+
+    mostraSalvataggio("💾 Salvato")
+    setTimeout(() => mostraSalvataggio(""), 1500)
+  }, 300)
+})
+
+document.getElementById("titolo-capitolo").addEventListener("input", function() {
+  clearTimeout(timeoutSalvataggio)
+  timeoutSalvataggio = setTimeout(async () => {
+    if (!stato.capitoloSelezionato) return
+
+    const contenuto = document.getElementById("testo-capitolo").value
+    const titolo = document.getElementById("titolo-capitolo").value
+
+    await client
+      .from("capitoli")
+      .update({ titolo, contenuto })
+      .eq("id", stato.capitoloSelezionato.id)
+
+    mostraSalvataggio("💾 Salvato")
+    setTimeout(() => mostraSalvataggio(""), 1500)
+  }, 300)
+})
+
 
 // =============================================
 // 3. PERSONAGGI
@@ -1297,21 +1340,32 @@ function avviaRealtime() {
 
         // Se il capitolo aperto è stato modificato da qualcun altro, aggiorna il testo
         if (
-          stato.capitoloSelezionato &&
-          payload.new?.id === stato.capitoloSelezionato.id &&
-          payload.eventType === "UPDATE"
-        ) {
-          const testoAttuale = document.getElementById("testo-capitolo").value
-          if (testoAttuale !== payload.new.contenuto) {
-            mostraSalvataggio("📡 Aggiornato da un collaboratore")
-            document.getElementById("testo-capitolo").value = payload.new.contenuto || ""
-            document.getElementById("titolo-capitolo").value = payload.new.titolo || ""
-            aggiornaContatore()
-            renderizzaLink()
-            setTimeout(() => mostraSalvataggio(""), 3000)
-          }
-        }
-      }
+  stato.capitoloSelezionato &&
+  payload.new?.id === stato.capitoloSelezionato.id &&
+  payload.eventType === "UPDATE"
+) {
+  // Non sovrascrivere se l'utente sta scrivendo in questo momento
+  if (timeoutSalvataggio) return
+
+  const testoAttuale = document.getElementById("testo-capitolo").value
+  if (testoAttuale !== payload.new.contenuto) {
+    mostraSalvataggio("📡 Modifica in arrivo...")
+
+    // Salva la posizione del cursore
+    const textarea = document.getElementById("testo-capitolo")
+    const posizione = textarea.selectionStart
+
+    document.getElementById("testo-capitolo").value = payload.new.contenuto || ""
+    document.getElementById("titolo-capitolo").value = payload.new.titolo || ""
+
+    // Ripristina la posizione del cursore
+    textarea.setSelectionRange(posizione, posizione)
+
+    aggiornaContatore()
+    renderizzaLink()
+    setTimeout(() => mostraSalvataggio(""), 2000)
+  }
+}
     )
     .on(
       "postgres_changes",
