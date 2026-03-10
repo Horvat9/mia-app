@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="it">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>I miei Progetti</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+
+    <!-- HEADER -->
+    <div class="header">
+      <h1>✍️ I miei Progetti</h1>
+      <div class="header-dx">
+        <span id="utente-email"></span>
+        <button id="btn-logout">Esci</button>
+      </div>
+    </div>
+
+    <!-- CONTENUTO -->
+    <div class="pagina">
+
+      <!-- FORM NUOVO PROGETTO -->
+      <div class="card-nuovo">
+        <h2>✨ Nuovo progetto</h2>
+        <input type="text" id="input-titolo" placeholder="Titolo del progetto..." />
+        <textarea id="input-descrizione" placeholder="Descrizione (opzionale)..."></textarea>
+        <button id="btn-crea">+ Crea progetto</button>
+        <p id="messaggio"></p>
+      </div>
+
+      <!-- INVITI RICEVUTI -->
+      <div id="pannello-inviti" style="display:none">
+        <h2>📬 Inviti ricevuti</h2>
+        <div id="lista-inviti-ricevuti"></div>
+      </div>
+
+      <!-- LISTA PROGETTI -->
+      <div id="lista-progetti"></div>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="app.js"></script>
+  </body>
+</html>

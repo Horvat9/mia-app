@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="it">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Editor Progetto</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+
+    <!-- HEADER -->
+    <div class="header">
+      <div class="header-sx">
+        <button id="btn-indietro">← Progetti</button>
+        <h1 id="titolo-progetto">Caricamento...</h1>
+      </div>
+      <div class="header-dx">
+        <span id="stato-salvataggio"></span>
+        <button id="btn-logout">Esci</button>
+      </div>
+    </div>
+
+    <!-- LAYOUT PRINCIPALE -->
+    <div class="editor-layout">
+
+      <!-- SIDEBAR -->
+      <div class="sidebar">
+
+        <div class="sidebar-sezione">
+          <div class="sidebar-titolo">
+            <span>📑 Capitoli</span>
+            <button id="btn-nuovo-capitolo">+</button>
+          </div>
+          <ul id="lista-capitoli"></ul>
+        </div>
+
+        <div class="sidebar-sezione">
+          <div class="sidebar-titolo">
+            <span>👤 Personaggi</span>
+            <button id="btn-nuovo-personaggio">+</button>
+          </div>
+          <ul id="lista-personaggi"></ul>
+        </div>
+
+      </div>
+
+      <!-- AREA PRINCIPALE -->
+      <div class="area-principale">
+
+        <!-- SCHEDE -->
+        <div class="schede">
+          <button class="scheda attiva" data-scheda="scrittura">✍️ Scrittura</button>
+          <button class="scheda" data-scheda="personaggio">👤 Personaggio</button>
+          <button class="scheda" data-scheda="note">📝 Note</button>
+          <button class="scheda" data-scheda="mappa">🗺️ Mappa</button>
+          <button class="scheda" data-scheda="collaboratori">👥 Collaboratori</button>
+          <button class="scheda" data-scheda="esportazione">📦 Esporta</button>
+        </div>
+
+        <!-- SCRITTURA -->
+        <div id="scheda-scrittura" class="contenuto-scheda">
+
+          <div id="placeholder-scrittura" class="placeholder">
+            👈 Seleziona un capitolo dalla sidebar per iniziare a scrivere
+          </div>
+
+          <div id="editor-attivo" style="display:none">
+
+            <input type="text" id="titolo-capitolo" placeholder="Titolo del capitolo..." />
+
+            <div class="editor-toolbar">
+              <label class="btn-toolbar" for="input-immagine">🖼️ Inserisci immagine</label>
+              <input type="file" id="input-immagine" accept="image/*" style="display:none" />
+              <button class="btn-toolbar" id="btn-inserisci-link">🔗 Link a capitolo</button>
+            </div>
+
+            <!-- PANNELLO LINK -->
+            <div id="pannello-link" style="display:none">
+              <p class="link-titolo">Collega a un capitolo:</p>
+              <div id="lista-link-capitoli"></div>
+            </div>
+
+            <!-- GALLERIA IMMAGINI -->
+            <div id="galleria-immagini"></div>
+
+            <!-- ANTEPRIMA LINK -->
+            <div id="anteprima-link" style="display:none"></div>
+
+            <textarea id="testo-capitolo" placeholder="Inizia a scrivere qui..."></textarea>
+
+            <div class="editor-azioni">
+              <span id="contatore-parole">0 parole</span>
+              <div class="editor-bottoni">
+                <button id="btn-correggi">🔍 Correggi</button>
+                <button id="btn-salva">💾 Salva</button>
+              </div>
+            </div>
+
+            <!-- PANNELLO CORREZIONI -->
+            <div id="pannello-correzioni" style="display:none">
+              <div class="correzioni-header">
+                <h3>📋 Suggerimenti AI</h3>
+                <button id="btn-chiudi-correzioni">×</button>
+              </div>
+              <div id="correzioni-contenuto"></div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- PERSONAGGIO -->
+        <div id="scheda-personaggio" class="contenuto-scheda" style="display:none">
+          <div id="placeholder-personaggio" class="placeholder">
+            👈 Seleziona un personaggio dalla sidebar
+          </div>
+          <div id="editor-personaggio" style="display:none">
+            <input type="text" id="nome-personaggio" placeholder="Nome del personaggio..." />
+            <input type="text" id="ruolo-personaggio" placeholder="Ruolo (es. protagonista, antagonista)..." />
+            <textarea id="desc-personaggio" placeholder="Descrizione fisica e psicologica..."></textarea>
+            <button id="btn-salva-personaggio">💾 Salva personaggio</button>
+          </div>
+        </div>
+
+        <!-- NOTE -->
+        <div id="scheda-note" class="contenuto-scheda" style="display:none">
+          <div class="note-layout">
+            <div class="note-form">
+              <textarea id="input-nota" placeholder="Scrivi una nota o bozza..."></textarea>
+              <button id="btn-aggiungi-nota">+ Aggiungi nota</button>
+            </div>
+            <div id="lista-note"></div>
+          </div>
+        </div>
+
+        <!-- MAPPA -->
+        <div id="scheda-mappa" class="contenuto-scheda" style="display:none">
+          <div class="mappa-info">
+            <p>🗺️ Mappa delle connessioni tra capitoli</p>
+            <p class="mappa-hint">Ogni nodo è un capitolo. Le frecce mostrano i collegamenti della storia.</p>
+          </div>
+          <div id="canvas-mappa"></div>
+        </div>
+
+        <!-- COLLABORATORI -->
+        <div id="scheda-collaboratori" class="contenuto-scheda" style="display:none">
+          <div class="collab-layout">
+
+            <div class="collab-card">
+              <h2>👥 Collaboratori</h2>
+              <p class="collab-desc">Invita altri utenti a lavorare su questo progetto</p>
+              <div class="collab-form">
+                <input type="email" id="input-email-invito" placeholder="Email del collaboratore..." />
+                <select id="input-ruolo-invito">
+                  <option value="editor">✏️ Editor — può modificare</option>
+                  <option value="lettore">👁️ Lettore — solo lettura</option>
+                </select>
+                <button id="btn-invita">Invia invito</button>
+              </div>
+              <p id="messaggio-invito"></p>
+            </div>
+
+            <div class="collab-card">
+              <h3>✅ Collaboratori attivi</h3>
+              <div id="lista-collaboratori">
+                <p class="vuoto">Nessun collaboratore ancora</p>
+              </div>
+            </div>
+
+            <div class="collab-card">
+              <h3>⏳ Inviti in sospeso</h3>
+              <div id="lista-inviti">
+                <p class="vuoto">Nessun invito in sospeso</p>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ESPORTAZIONE -->
+<div id="scheda-esportazione" class="contenuto-scheda" style="display:none">
+  <div class="export-layout">
+
+    <div class="export-card">
+      <h2>📦 Esporta progetto</h2>
+      <p class="export-desc">Esporta i capitoli del progetto nel formato compatibile con il tuo motore di gioco</p>
+    </div>
+
+    <!-- UNITY -->
+    <div class="export-card">
+      <div class="export-header">
+        <span class="export-logo">🎮</span>
+        <div>
+          <h3>Unity</h3>
+          <p>Formato JSON compatibile con Yarn Spinner e Ink</p>
+        </div>
+      </div>
+      <button class="btn-export" id="btn-export-unity">Esporta per Unity →</button>
+    </div>
+
+    <!-- UNREAL -->
+    <div class="export-card">
+      <div class="export-header">
+        <span class="export-logo">⚙️</span>
+        <div>
+          <h3>Unreal Engine</h3>
+          <p>Formato CSV importabile come DataTable</p>
+        </div>
+      </div>
+      <button class="btn-export" id="btn-export-unreal">Esporta per Unreal →</button>
+    </div>
+
+    <!-- GODOT -->
+    <div class="export-card">
+      <div class="export-header">
+        <span class="export-logo">🤖</span>
+        <div>
+          <h3>Godot</h3>
+          <p>Formato JSON compatibile con Dialogic</p>
+        </div>
+      </div>
+      <button class="btn-export" id="btn-export-godot">Esporta per Godot →</button>
+    </div>
+
+    <!-- MARKDOWN -->
+    <div class="export-card">
+      <div class="export-header">
+        <span class="export-logo">📄</span>
+        <div>
+          <h3>Markdown / TXT</h3>
+          <p>Testo semplice per qualsiasi uso</p>
+        </div>
+      </div>
+      <button class="btn-export" id="btn-export-markdown">Esporta come Markdown →</button>
+    </div>
+
+    <!-- HTML -->
+<div class="export-card">
+  <div class="export-header">
+    <span class="export-logo">🌐</span>
+    <div>
+      <h3>HTML</h3>
+      <p>Pagina web leggibile nel browser con navigazione tra capitoli</p>
+    </div>
+  </div>
+  <button class="btn-export" id="btn-export-html">Esporta come HTML →</button>
+</div>
+
+<!-- PDF -->
+<div class="export-card">
+  <div class="export-header">
+    <span class="export-logo">📕</span>
+    <div>
+      <h3>PDF</h3>
+      <p>Documento stampabile con tutti i capitoli</p>
+    </div>
+  </div>
+  <button class="btn-export" id="btn-export-pdf">Esporta come PDF →</button>
+</div>
+
+<!-- WORD -->
+<div class="export-card">
+  <div class="export-header">
+    <span class="export-logo">📘</span>
+    <div>
+      <h3>Word (.docx)</h3>
+      <p>Documento editabile in Microsoft Word o Google Docs</p>
+    </div>
+  </div>
+  <button class="btn-export" id="btn-export-word">Esporta come Word →</button>
+</div>
+
+<!-- EPUB -->
+<div class="export-card">
+  <div class="export-header">
+    <span class="export-logo">📚</span>
+    <div>
+      <h3>EPUB</h3>
+      <p>Ebook leggibile su Kindle, Kobo e qualsiasi reader</p>
+    </div>
+  </div>
+  <button class="btn-export" id="btn-export-epub">Esporta come EPUB →</button>
+</div>
+
+  </div>
+</div>
+
+      </div>
+    </div>
+    <!-- Librerie per esportazione -->
+     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+     <script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="progetto.js"></script>
+  </body>
+</html>
