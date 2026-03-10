@@ -133,6 +133,9 @@ async function salvaCapitolo() {
 
   // Ripristina la sintassi completa [testo](cap:ID) prima di salvare
   let contenuto = document.getElementById("testo-capitolo").value
+  // Rimuove eventuali (cap:ID) duplicati
+  contenuto = contenuto.replace(/\[([^\]]+)\]\(cap:[^)]+\)/g, "[$1]")
+  // Aggiunge (cap:ID) a tutti i [testo] in cache
   contenuto = contenuto.replace(/\[([^\]]+)\]/g, (match, testo) => {
     const cached = linksCache.find(l => l.testo === testo)
     return cached ? "[" + testo + "](cap:" + cached.id + ")" : match
@@ -168,6 +171,9 @@ document.getElementById("testo-capitolo").addEventListener("input", function() {
     if (!stato.capitoloSelezionato) return
 
     let contenuto = document.getElementById("testo-capitolo").value
+    // Rimuove eventuali (cap:ID) duplicati
+    contenuto = contenuto.replace(/\[([^\]]+)\]\(cap:[^)]+\)/g, "[$1]")
+    // Aggiunge (cap:ID) a tutti i [testo] in cache
     contenuto = contenuto.replace(/\[([^\]]+)\]/g, (match, testo) => {
       const cached = linksCache.find(l => l.testo === testo)
       return cached ? "[" + testo + "](cap:" + cached.id + ")" : match
@@ -191,6 +197,9 @@ document.getElementById("titolo-capitolo").addEventListener("input", function() 
     if (!stato.capitoloSelezionato) return
 
     let contenuto = document.getElementById("testo-capitolo").value
+    // Rimuove eventuali (cap:ID) duplicati
+    contenuto = contenuto.replace(/\[([^\]]+)\]\(cap:[^)]+\)/g, "[$1]")
+    // Aggiunge (cap:ID) a tutti i [testo] in cache
     contenuto = contenuto.replace(/\[([^\]]+)\]/g, (match, testo) => {
       const cached = linksCache.find(l => l.testo === testo)
       return cached ? "[" + testo + "](cap:" + cached.id + ")" : match
