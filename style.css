@@ -1237,3 +1237,158 @@ input:focus {
 }
 
 .btn-export:hover { opacity: 0.9; }
+
+/* =============================================
+   DARK MODE
+============================================= */
+body.dark {
+  background-color: #0f0f1a;
+  color: #e2e8f0;
+}
+
+/* Login */
+body.dark .contenitore {
+  background: #1a1a2e;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+}
+
+body.dark .contenitore h1 { color: #e2e8f0; }
+body.dark .contenitore p { color: #94a3b8; }
+body.dark label { color: #cbd5e1; }
+
+body.dark input,
+body.dark textarea,
+body.dark select {
+  background: #0f0f1a;
+  border-color: #2d2d4e;
+  color: #e2e8f0;
+}
+
+body.dark input:focus,
+body.dark textarea:focus {
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79,70,229,0.2);
+}
+
+/* App page */
+body.dark .pagina { background: #0f0f1a; }
+
+body.dark .card-nuovo {
+  background: #1a1a2e;
+  border-color: #2d2d4e;
+}
+
+body.dark .card-progetto {
+  background: #1a1a2e;
+  border-color: #2d2d4e;
+}
+
+body.dark .card-progetto:hover {
+  box-shadow: 0 4px 20px rgba(79,70,229,0.2);
+}
+
+body.dark .card-progetto h3 { color: #e2e8f0; }
+body.dark .card-desc { color: #64748b; }
+body.dark .card-info { background: #0f0f1a; color: #64748b; }
+
+/* Editor */
+body.dark .area-principale { background: #0f0f1a; }
+
+body.dark .schede {
+  background: #1a1a2e;
+  border-bottom-color: #2d2d4e;
+}
+
+body.dark .scheda {
+  background: #0f0f1a;
+  color: #64748b;
+}
+
+body.dark .scheda:hover { background: #2d2d4e; color: #e2e8f0; }
+
+body.dark #titolo-capitolo {
+  border-bottom-color: #2d2d4e;
+  color: #e2e8f0;
+}
+
+body.dark #titolo-capitolo:focus { border-bottom-color: #4f46e5; }
+
+body.dark .editor-toolbar { border-bottom-color: #2d2d4e; }
+body.dark .btn-toolbar {
+  background: #0f0f1a;
+  border-color: #2d2d4e;
+  color: #94a3b8;
+}
+
+body.dark .btn-toolbar:hover { background: #2d2d4e; }
+
+body.dark #testo-capitolo { color: #e2e8f0; }
+
+body.dark .editor-azioni { border-top-color: #2d2d4e; }
+body.dark #contatore-parole { background: #1a1a2e; color: #64748b; }
+
+body.dark #pannello-link {
+  background: #1a1a2e;
+  border-color: #2d2d4e;
+}
+
+body.dark #anteprima-link {
+  background: #1a1a2e;
+  border-color: #2d2d4e;
+}
+
+body.dark #pannello-correzioni {
+  background: #1a1a2e;
+  border-color: #2d2d4e;
+}
+
+body.dark .correzioni-header { background: #0f0f1a; border-bottom-color: #2d2d4e; }
+body.dark .correzioni-header h3 { color: #e2e8f0; }
+body.dark .correzione-card { background: #0f0f1a; border-color: #2d2d4e; }
+body.dark .correzione-messaggio { color: #94a3b8; }
+
+/* Note */
+body.dark .nota-item {
+  background: #1a1a2e;
+  border-color: #2d2d4e;
+}
+
+body.dark .nota-item p { color: #e2e8f0; }
+
+/* Collaboratori */
+body.dark .collab-card {
+  background: #1a1a2e;
+  border-color: #2d2d4e;
+}
+
+body.dark .collab-card h2,
+body.dark .collab-card h3 { color: #e2e8f0; }
+
+/* Esportazione */
+body.dark .export-card {
+  background: #1a1a2e;
+  border-color: #2d2d4e;
+}
+
+body.dark .export-card h2,
+body.dark .export-card h3 { color: #e2e8f0; }
+
+/* Mappa */
+body.dark #canvas-mappa {
+  background: #1a1a2e;
+  border-color: #2d2d4e;
+}
+
+/* Toggle button */
+.btn-darkmode {
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.2);
+  color: white;
+  padding: 7px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background 0.2s;
+}
+
+.btn-darkmode:hover { background: rgba(255,255,255,0.2); }
