@@ -1366,6 +1366,7 @@ function avviaRealtime() {
     setTimeout(() => mostraSalvataggio(""), 2000)
   }
 }
+      }
     )
     .on(
       "postgres_changes",
