@@ -32,6 +32,7 @@ async function init() {
   caricaPersonaggi()
   caricaNote()
   avviaRealtime()
+  creaViewer()
 }
 
 
@@ -832,37 +833,89 @@ function inserisciLink(capitolo) {
 }
 
 function renderizzaLink() {
-  const testo = document.getElementById("testo-capitolo").value
+  // Aggiorna il viewer con il testo renderizzato
+  aggiornaViewer()
+}
+
+// =============================================
+// VIEWER — testo renderizzato con link cliccabili
+// =============================================
+function creaViewer() {
+  const textarea = document.getElementById("testo-capitolo")
+  if (!textarea) return
+
+  // Crea il div viewer
+  const viewer = document.createElement("div")
+  viewer.id = "viewer-capitolo"
+  viewer.style.display = "none"
+  textarea.parentNode.insertBefore(viewer, textarea)
+
+  // Nasconde il pannello anteprima-link (non serve più)
   const anteprima = document.getElementById("anteprima-link")
-  if (!anteprima) return
+  if (anteprima) anteprima.style.display = "none"
 
-  const regex = /\[([^\]]+)\]/g
-  let match
-  const links = []
+  // Quando la textarea perde il focus → mostra il viewer
+  textarea.addEventListener("blur", function(e) {
+    // Piccolo delay per non bloccare click sui bottoni link nel pannello
+    setTimeout(() => {
+      aggiornaViewer()
+      viewer.style.display = "block"
+      textarea.style.display = "none"
+    }, 150)
+  })
 
-  while ((match = regex.exec(testo)) !== null) {
-    const cached = linksCache.find(l => l.testo === match[1])
-    if (cached) links.push({ testo: match[1], id: cached.id })
+  // Quando si clicca il viewer → torna alla textarea
+  viewer.addEventListener("click", function(e) {
+    // Se l'utente ha cliccato un link, non aprire la textarea
+    if (e.target.classList.contains("link-inline")) return
+    viewer.style.display = "none"
+    textarea.style.display = "block"
+    textarea.focus()
+  })
+}
+
+function aggiornaViewer() {
+  const viewer = document.getElementById("viewer-capitolo")
+  if (!viewer) return
+
+  const testo = document.getElementById("testo-capitolo").value
+  viewer.innerHTML = ""
+
+  if (!testo.trim()) {
+    viewer.innerHTML = "<span style='color:#aaa'>Inizia a scrivere qui...</span>"
+    return
   }
 
-  anteprima.innerHTML = ""
-  if (links.length === 0) { anteprima.style.display = "none"; return }
+  // Divide il testo in parti: testo normale e [link]
+  const parti = testo.split(/(\[[^\]]+\])/g)
 
-  anteprima.style.display = "block"
-  const titolo = document.createElement("p")
-  titolo.className = "anteprima-titolo"
-  titolo.textContent = "🔗 Link nel capitolo:"
-  anteprima.appendChild(titolo)
-
-  links.forEach(link => {
-    const btn = document.createElement("button")
-    btn.className = "btn-link-anteprima"
-    btn.textContent = link.testo
-    btn.addEventListener("click", async () => {
-      const { data } = await client.from("capitoli").select("*").eq("id", link.id).single()
-      if (data) apriCapitolo(data)
-    })
-    anteprima.appendChild(btn)
+  parti.forEach(parte => {
+    const matchLink = parte.match(/^\[([^\]]+)\]$/)
+    if (matchLink) {
+      const etichetta = matchLink[1]
+      const cached = linksCache.find(l => l.testo === etichetta)
+      if (cached) {
+        // È un link cliccabile
+        const btn = document.createElement("button")
+        btn.className = "link-inline"
+        btn.textContent = etichetta
+        btn.addEventListener("click", async (e) => {
+          e.stopPropagation()
+          const { data } = await client.from("capitoli").select("*").eq("id", cached.id).single()
+          if (data) apriCapitolo(data)
+        })
+        viewer.appendChild(btn)
+      } else {
+        // [testo] senza ID in cache — mostralo come testo normale
+        viewer.appendChild(document.createTextNode(parte))
+      }
+    } else {
+      // Testo normale — preserva le righe
+      const span = document.createElement("span")
+      span.style.whiteSpace = "pre-wrap"
+      span.textContent = parte
+      viewer.appendChild(span)
+    }
   })
 }
 
@@ -1426,3 +1479,42 @@ function avviaRealtime() {
 
 // Avvia tutto
 init()
+
+// CSS viewer link inline
+const stileViewer = document.createElement("style")
+stileViewer.textContent = `
+#viewer-capitolo {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 16px;
+  line-height: 1.9;
+  min-height: 300px;
+  max-height: 420px;
+  overflow-y: auto;
+  color: #2d2d2d;
+  cursor: text;
+  padding: 4px 0;
+}
+body.dark #viewer-capitolo { color: #e2e8f0; }
+
+.link-inline {
+  display: inline;
+  background: linear-gradient(135deg, #4f46e5, #6366f1);
+  color: white;
+  border: none;
+  padding: 3px 12px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 14px;
+  font-family: Arial, sans-serif;
+  font-weight: 500;
+  margin: 0 2px;
+  box-shadow: 0 2px 6px rgba(79,70,229,0.3);
+  transition: opacity 0.15s, transform 0.15s;
+  vertical-align: middle;
+}
+.link-inline:hover {
+  opacity: 0.85;
+  transform: translateY(-1px);
+}
+`
+document.head.appendChild(stileViewer)
