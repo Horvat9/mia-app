@@ -7,46 +7,41 @@
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-
-    <!-- HEADER -->
     <div class="header">
-      <h1>✍️ I miei Progetti</h1>
+      <h1>✍️ <span data-i18n="I tuoi Librogame">I miei Progetti</span></h1>
       <div class="header-dx">
         <span id="utente-email"></span>
+        <div id="lang-container"></div>
         <button class="btn-darkmode" id="btn-darkmode">🌙</button>
-        <button id="btn-logout">Esci</button>
+        <button id="btn-logout" data-i18n="Esci">Esci</button>
       </div>
     </div>
 
-    <!-- CONTENUTO -->
     <div class="pagina">
-
-      <!-- FORM NUOVO PROGETTO -->
       <div class="card-nuovo">
-        <h2>✨ Nuovo progetto</h2>
-        <input type="text" id="input-titolo" placeholder="Titolo del progetto..." />
-        <textarea id="input-descrizione" placeholder="Descrizione (opzionale)..."></textarea>
-        <button id="btn-crea">+ Crea progetto</button>
+        <h2>✨ <span data-i18n="+ Nuovo Progetto">Nuovo progetto</span></h2>
+        <input type="text" id="input-titolo" data-i18n="Titolo" data-i18n-attr="placeholder" placeholder="Titolo del progetto..." />
+        <textarea id="input-descrizione" data-i18n="Descrizione (opzionale)" data-i18n-attr="placeholder" placeholder="Descrizione (opzionale)..."></textarea>
+        <button id="btn-crea" data-i18n="Crea">+ Crea progetto</button>
         <p id="messaggio"></p>
       </div>
 
-      <!-- INVITI RICEVUTI -->
       <div id="pannello-inviti" style="display:none">
-        <h2>📬 Inviti ricevuti</h2>
+        <h2>📬 <span data-i18n="Inviti ricevuti">Inviti ricevuti</span></h2>
         <div id="lista-inviti-ricevuti"></div>
       </div>
 
-      <!-- LISTA PROGETTI -->
       <div id="lista-progetti"></div>
-
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="darkmode.js"></script>
+    <script src="i18n.js"></script>
     <script src="app.js"></script>
+    <script> I18n.init("lang-container") </script>
 
     <footer class="footer">
-  <p>Made with ❤️ by <strong>Horvat9</strong> · GameBook Studio © 2026</p>
-</footer>
+      <p>Made with ❤️ by <strong>Horvat9</strong> · GameBook Studio © 2026</p>
+    </footer>
   </body>
 </html>

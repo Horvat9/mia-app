@@ -68,7 +68,7 @@ async function caricaProgetti() {
   if (tuttiWeb.length > 0) {
     const intestazione = document.createElement("h3")
     intestazione.className = "sezione-titolo"
-    intestazione.textContent = "📝 Progetti Web"
+    intestazione.textContent = tr("Progetti Web")
     lista.appendChild(intestazione)
 
     tuttiWeb.forEach(progetto => {
@@ -87,7 +87,7 @@ async function caricaProgetti() {
   if (desktop.length > 0) {
     const intestazione = document.createElement("h3")
     intestazione.className = "sezione-titolo"
-    intestazione.textContent = "🖥️ Progetti GameBook Studio"
+    intestazione.textContent = tr("Progetti GameBook Studio")
     lista.appendChild(intestazione)
 
     desktop.forEach(p => {
@@ -115,10 +115,10 @@ function creaCardProgetto(progetto) {
 
   const info = document.createElement("span")
   info.className = "card-info"
-  info.textContent = numCapitoli + (numCapitoli === 1 ? " capitolo" : " capitoli")
+  info.textContent = numCapitoli + " " + tr(numCapitoli === 1 ? "capitolo" : "capitoli")
 
   const btnApri = document.createElement("button")
-  btnApri.textContent = "Apri →"
+  btnApri.textContent = tr("Apri →")
   btnApri.className = "btn-apri"
   btnApri.addEventListener("click", () => {
     localStorage.setItem("progetto_id", progetto.id)
@@ -166,11 +166,19 @@ function creaCardDesktop(p) {
 
   const info = document.createElement("span")
   info.className = "card-info"
-  info.textContent = numParagrafi + (numParagrafi === 1 ? " paragrafo" : " paragrafi")
+  info.textContent = numParagrafi + " " + tr(numParagrafi === 1 ? "paragrafo" : "paragrafi")
 
   const badge = document.createElement("span")
   badge.className = "badge-condiviso"
   badge.textContent = "🖥️ GameBook Studio"
+
+  const btnApri = document.createElement("button")
+  btnApri.textContent = tr("Apri →")
+  btnApri.className = "btn-apri"
+  btnApri.addEventListener("click", () => {
+    localStorage.setItem("desktop_project_id", p.id)
+    window.location.href = "progetto_desktop.html"
+  })
 
   const btnElimina = document.createElement("button")
   btnElimina.textContent = "🗑️"
@@ -181,6 +189,7 @@ function creaCardDesktop(p) {
   azioni.className = "card-azioni"
   azioni.appendChild(badge)
   azioni.appendChild(info)
+  azioni.appendChild(btnApri)
   azioni.appendChild(btnElimina)
 
   card.appendChild(titolo)
@@ -196,7 +205,7 @@ document.getElementById("btn-crea").addEventListener("click", async function() {
   const titolo = document.getElementById("input-titolo").value.trim()
   const descrizione = document.getElementById("input-descrizione").value.trim()
 
-  if (titolo === "") { mostraMessaggio("Inserisci almeno il titolo!", "errore"); return }
+  if (titolo === "") { mostraMessaggio(tr("Inserisci almeno il titolo!"), "errore"); return }
 
   const { data: { user } } = await client.auth.getUser()
   const { error } = await client
@@ -204,12 +213,12 @@ document.getElementById("btn-crea").addEventListener("click", async function() {
     .insert({ titolo, descrizione, user_id: user.id })
 
   if (error) {
-    mostraMessaggio("Errore nella creazione ❌", "errore")
+    mostraMessaggio(tr("Errore nella creazione ❌"), "errore")
     console.log(error.message)
   } else {
     document.getElementById("input-titolo").value = ""
     document.getElementById("input-descrizione").value = ""
-    mostraMessaggio("Progetto creato! ✅", "successo")
+    mostraMessaggio(tr("Progetto creato! ✅"), "successo")
     caricaProgetti()
   }
 })
@@ -218,13 +227,13 @@ document.getElementById("btn-crea").addEventListener("click", async function() {
 // 6. ELIMINA PROGETTO
 // =============================================
 async function eliminaProgetto(id) {
-  if (!confirm("Sei sicuro? Eliminerai anche tutti i capitoli!")) return
+  if (!confirm(tr("Sei sicuro? Eliminerai anche tutti i capitoli!"))) return
   const { error } = await client.from("progetti").delete().eq("id", id)
   if (!error) caricaProgetti()
 }
 
 async function eliminaDesktop(id) {
-  if (!confirm("Elimina questo progetto da GameBook Studio?")) return
+  if (!confirm(tr("Sei sicuro? Eliminerai anche tutti i capitoli?"))) return
   const { error } = await client.from("projects").delete().eq("id", id)
   if (!error) caricaProgetti()
 }
@@ -309,7 +318,7 @@ async function accettaInvito(invito, user) {
     ruolo: invito.ruolo
   })
   await client.from("inviti").update({ accettato: true }).eq("id", invito.id)
-  alert("Invito accettato! Trovi il progetto nella lista.")
+  alert(tr("Invito accettato!"))
   caricaInvitiRicevuti()
   caricaProgetti()
 }

@@ -7,30 +7,42 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body class="login-page">
-
-    <button class="btn-darkmode btn-darkmode-float" id="btn-darkmode">🌙</button>
+  <button class="btn-darkmode btn-darkmode-float" id="btn-darkmode">🌙</button>
+  <div style="position:fixed;top:14px;right:64px;z-index:100" id="lang-container"></div>
 
   <div class="contenitore">
-    <h1>👋 Bentornato</h1>
-    <p>Accedi al tuo account per continuare</p>
-
+    <h1>👋 <span data-i18n="Bentornato">Bentornato</span></h1>
+    <p data-i18n="Accedi al tuo account per continuare">Accedi al tuo account per continuare</p>
     <div class="form">
-      <label>Email</label>
+      <label data-i18n="Email">Email</label>
       <input type="email" id="email" placeholder="la-tua@email.com" />
-
-      <label>Password</label>
+      <label data-i18n="Password">Password</label>
       <input type="password" id="password" placeholder="••••••••" />
-
-      <button id="btn-login">Accedi</button>
-
+      <button id="btn-login" data-i18n="Accedi">Accedi</button>
       <p id="messaggio"></p>
-
-      <p class="link">Non hai un account? <a href="registrati.html">Registrati</a></p>
+      <p class="link">
+        <span data-i18n="Non hai un account?">Non hai un account?</span>
+        <a href="registrati.html"> <span data-i18n="Registrati">Registrati</span></a>
+      </p>
     </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="darkmode.js"></script>
+  <script src="i18n.js"></script>
+  <script>
+    TRANSLATIONS["Bentornato"] = {
+      it:"Bentornato", en:"Welcome back", fr:"Bon retour", es:"Bienvenido de nuevo",
+      pt:"Bem-vindo de volta", de:"Willkommen zurück", ja:"おかえりなさい", zh:"欢迎回来"
+    }
+    TRANSLATIONS["Accedi al tuo account per continuare"] = {
+      it:"Accedi al tuo account per continuare", en:"Sign in to continue",
+      fr:"Connectez-vous pour continuer", es:"Inicia sesión para continuar",
+      pt:"Faça login para continuar", de:"Melde dich an, um fortzufahren",
+      ja:"続けるにはサインインしてください", zh:"登录以继续"
+    }
+    I18n.init("lang-container")
+  </script>
   <script src="script.js"></script>
 </body>
 </html>

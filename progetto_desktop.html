@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Visualizza Progetto</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .desktop-viewer { max-width: 860px; margin: 30px auto; padding: 0 20px 60px; }
+    .info-box { background:#f0f0ff; border-left:4px solid #6366f1; padding:14px 18px; border-radius:8px; margin-bottom:28px; }
+    .info-box strong { display:block; font-size:1.15rem; margin-bottom:4px; }
+    .info-box span { font-size:0.9rem; color:#666; }
+    .para-card { background:#fff; border:1px solid #e5e7eb; border-radius:12px; padding:22px 26px; margin-bottom:18px; box-shadow:0 1px 4px rgba(0,0,0,.05); }
+    body.dark .para-card { background:#1e1e2e; border-color:#333; }
+    .para-num { font-size:0.72rem; font-weight:700; color:#6366f1; text-transform:uppercase; letter-spacing:.08em; margin-bottom:4px; }
+    .para-title { font-size:1.1rem; font-weight:600; margin:0 0 12px; }
+    .para-text { line-height:1.75; white-space:pre-wrap; color:#374151; }
+    body.dark .para-text { color:#ccc; }
+    .scelte { margin-top:16px; display:flex; flex-direction:column; gap:6px; }
+    .scelta { padding:9px 14px; background:#f3f4f6; border-radius:8px; font-size:0.92rem; }
+    body.dark .scelta { background:#2a2a3e; }
+    .scelta-link { color:#6366f1; font-weight:600; cursor:pointer; margin-left:6px; }
+    .scelta-link:hover { text-decoration:underline; }
+    .badge-fine { display:inline-block; margin-top:14px; padding:4px 14px; background:#6366f1; color:#fff; border-radius:20px; font-size:0.8rem; font-weight:600; }
+    .badge-desktop { background:#ede9fe; color:#6366f1; padding:3px 10px; border-radius:20px; font-size:0.8rem; font-weight:600; margin-left:10px; }
+    .msg { text-align:center; padding:60px 20px; color:#999; }
+    .msg.errore { color:#e55; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="header-sx">
+      <button id="btn-indietro">← <span data-i18n="← Progetti">Progetti</span></button>
+      <h1 id="titolo-progetto">Caricamento...</h1>
+      <span class="badge-desktop">🖥️ GameBook Studio</span>
+    </div>
+    <div class="header-dx">
+      <button class="btn-darkmode" id="btn-darkmode">🌙</button>
+      <button id="btn-logout">Esci</button>
+    </div>
+  </div>
+
+  <div class="desktop-viewer">
+    <div id="contenuto"><p class="msg">⏳ Caricamento progetto...</p></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="darkmode.js"></script>
+  <script src="i18n.js"></script>
+  <script>
+    const SUPABASE_URL = "https://zpoqbwmgubfqphscngaz.supabase.co"
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpwb3Fid21ndWJmcXBoc2NuZ2F6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMxMzIyNTEsImV4cCI6MjA4ODcwODI1MX0.Sv0ImWp-OUBB5DpmST2ZeLvuYl50cY60kdt7pwDC5vg"
+    const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
+
+    document.getElementById("btn-indietro").onclick = () => { window.location.href = "app.html" }
+    document.getElementById("btn-logout").onclick = async () => { await client.auth.signOut(); window.location.href = "index.html" }
+
+    function errore(msg) { document.getElementById("contenuto").innerHTML = `<p class="msg errore">❌ ${msg}</p>` }
+
+    async function init() {
+      const { data: { user } } = await client.auth.getUser()
+      if (!user) { window.location.href = "index.html"; return }
+
+      const progettoId = localStorage.getItem("desktop_project_id")
+      if (!progettoId) { window.location.href = "app.html"; return }
+
+      const { data, error } = await client.from("projects").select("*").eq("id", progettoId).single()
+      if (error || !data) { errore("Progetto non trovato: " + (error?.message || "")); return }
+
+      document.getElementById("titolo-progetto").textContent = data.name
+      document.title = data.name
+
+      let paragrafi = []
+      try {
+        // data.data è JSONB — arriva già come oggetto JS, non come stringa
+        const json = (typeof data.data === "string") ? JSON.parse(data.data) : data.data
+
+        // Debug: mostra in console cosa contiene il campo data
+        console.log("data.data tipo:", typeof data.data)
+        console.log("data.data valore:", data.data)
+        console.log("chiavi json:", json ? Object.keys(json) : "null")
+
+        // Prova vari path per trovare i paragrafi
+        paragrafi = json?.paragraphs        // formato C++ standard
+                 || json?.Paragraphs        // formato alternativo
+                 || json?.paragraphs_list   // altro possibile nome
+                 || []
+
+        console.log("paragrafi trovati:", paragrafi.length)
+      } catch(e) { errore("Errore lettura dati: " + e.message); return }
+
+      const c = document.getElementById("contenuto")
+      c.innerHTML = ""
+
+      // Info box
+      const info = document.createElement("div")
+      info.className = "info-box"
+      info.innerHTML = `<strong>📖 ${data.name}</strong><span>${data.author ? "Autore: <b>" + data.author + "</b> &nbsp;·&nbsp; " : ""}${data.description || ""}</span>`
+      c.appendChild(info)
+
+      if (paragrafi.length === 0) { c.innerHTML += "<p class='msg'>Questo progetto non ha ancora paragrafi.</p>"; return }
+
+      paragrafi.forEach(para => {
+        const card = document.createElement("div")
+        card.className = "para-card"
+        card.id = "para-" + para.number
+        card.innerHTML = `<div class="para-num">Paragrafo ${para.number}</div><h2 class="para-title">${para.title || ""}</h2><div class="para-text">${para.content || ""}</div>`
+
+        if (para.choices && para.choices.length > 0) {
+          const sd = document.createElement("div"); sd.className = "scelte"
+          para.choices.forEach(sc => {
+            // C++ serializza "target" (non "targetParagraph")
+            const dest = sc.target ?? sc.targetParagraph ?? "?"
+            const s = document.createElement("div"); s.className = "scelta"
+            s.innerHTML = `➜ ${sc.text || ""} <span class="scelta-link" data-target="${dest}">${tr("→ vai al paragrafo")} ${dest}</span>`
+            sd.appendChild(s)
+          })
+          card.appendChild(sd)
+        }
+
+        // C++ serializza "isEnding" (non "isEnding" già ok, ma verifica anche "is_ending")
+        if (para.isEnding || para.is_ending) {
+          const b = document.createElement("div"); b.className = "badge-fine"; b.textContent = "tr("⬥ Fine")"; card.appendChild(b)
+        }
+        c.appendChild(card)
+      })
+
+      c.addEventListener("click", e => {
+        const t = e.target.closest(".scelta-link")?.dataset?.target
+        if (!t) return
+        document.getElementById("para-" + t)?.scrollIntoView({ behavior: "smooth", block: "start" })
+      })
+    }
+
+    init()
+  </script>
+</body>
+</html>
