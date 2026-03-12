@@ -10,6 +10,7 @@
     .info-box { background:#f0f0ff; border-left:4px solid #6366f1; padding:14px 18px; border-radius:8px; margin-bottom:28px; }
     .info-box strong { display:block; font-size:1.15rem; margin-bottom:4px; }
     .info-box span { font-size:0.9rem; color:#666; }
+    body.dark .info-box { background:#1e1e3a; }
     .para-card { background:#fff; border:1px solid #e5e7eb; border-radius:12px; padding:22px 26px; margin-bottom:18px; box-shadow:0 1px 4px rgba(0,0,0,.05); }
     body.dark .para-card { background:#1e1e2e; border-color:#333; }
     .para-num { font-size:0.72rem; font-weight:700; color:#6366f1; text-transform:uppercase; letter-spacing:.08em; margin-bottom:4px; }
@@ -30,11 +31,12 @@
 <body>
   <div class="header">
     <div class="header-sx">
-      <button id="btn-indietro">← <span data-i18n="← Progetti">Progetti</span></button>
+      <button id="btn-indietro">← Progetti</button>
       <h1 id="titolo-progetto">Caricamento...</h1>
       <span class="badge-desktop">🖥️ GameBook Studio</span>
     </div>
     <div class="header-dx">
+      <div id="lang-container"></div>
       <button class="btn-darkmode" id="btn-darkmode">🌙</button>
       <button id="btn-logout">Esci</button>
     </div>
@@ -48,88 +50,160 @@
   <script src="darkmode.js"></script>
   <script src="i18n.js"></script>
   <script>
+    // ── Supabase ────────────────────────────────────────────────────────────────
     const SUPABASE_URL = "https://zpoqbwmgubfqphscngaz.supabase.co"
     const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpwb3Fid21ndWJmcXBoc2NuZ2F6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMxMzIyNTEsImV4cCI6MjA4ODcwODI1MX0.Sv0ImWp-OUBB5DpmST2ZeLvuYl50cY60kdt7pwDC5vg"
     const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
 
+    // ── i18n ────────────────────────────────────────────────────────────────────
+    I18n.init("lang-container")
+    document.getElementById("btn-indietro").textContent = "← " + tr("← Progetti").replace("← ", "")
+    document.getElementById("btn-logout").textContent = tr("Esci")
+
+    // ── Pulsanti header ─────────────────────────────────────────────────────────
     document.getElementById("btn-indietro").onclick = () => { window.location.href = "app.html" }
-    document.getElementById("btn-logout").onclick = async () => { await client.auth.signOut(); window.location.href = "index.html" }
+    document.getElementById("btn-logout").onclick = async () => {
+      await client.auth.signOut()
+      window.location.href = "index.html"
+    }
 
-    function errore(msg) { document.getElementById("contenuto").innerHTML = `<p class="msg errore">❌ ${msg}</p>` }
+    // ── Mostra errore nel contenuto ─────────────────────────────────────────────
+    function mostraErrore(msg) {
+      document.getElementById("contenuto").innerHTML =
+        '<p class="msg errore">❌ ' + msg + '</p>'
+    }
 
+    // ── Carica e renderizza il progetto ─────────────────────────────────────────
     async function init() {
-      const { data: { user } } = await client.auth.getUser()
-      if (!user) { window.location.href = "index.html"; return }
-
-      const progettoId = localStorage.getItem("desktop_project_id")
-      if (!progettoId) { window.location.href = "app.html"; return }
-
-      const { data, error } = await client.from("projects").select("*").eq("id", progettoId).single()
-      if (error || !data) { errore("Progetto non trovato: " + (error?.message || "")); return }
-
-      document.getElementById("titolo-progetto").textContent = data.name
-      document.title = data.name
-
-      let paragrafi = []
       try {
-        // data.data è JSONB — arriva già come oggetto JS, non come stringa
-        const json = (typeof data.data === "string") ? JSON.parse(data.data) : data.data
-
-        // Debug: mostra in console cosa contiene il campo data
-        console.log("data.data tipo:", typeof data.data)
-        console.log("data.data valore:", data.data)
-        console.log("chiavi json:", json ? Object.keys(json) : "null")
-
-        // Prova vari path per trovare i paragrafi
-        paragrafi = json?.paragraphs        // formato C++ standard
-                 || json?.Paragraphs        // formato alternativo
-                 || json?.paragraphs_list   // altro possibile nome
-                 || []
-
-        console.log("paragrafi trovati:", paragrafi.length)
-      } catch(e) { errore("Errore lettura dati: " + e.message); return }
-
-      const c = document.getElementById("contenuto")
-      c.innerHTML = ""
-
-      // Info box
-      const info = document.createElement("div")
-      info.className = "info-box"
-      info.innerHTML = `<strong>📖 ${data.name}</strong><span>${data.author ? "Autore: <b>" + data.author + "</b> &nbsp;·&nbsp; " : ""}${data.description || ""}</span>`
-      c.appendChild(info)
-
-      if (paragrafi.length === 0) { c.innerHTML += "<p class='msg'>Questo progetto non ha ancora paragrafi.</p>"; return }
-
-      paragrafi.forEach(para => {
-        const card = document.createElement("div")
-        card.className = "para-card"
-        card.id = "para-" + para.number
-        card.innerHTML = `<div class="para-num">Paragrafo ${para.number}</div><h2 class="para-title">${para.title || ""}</h2><div class="para-text">${para.content || ""}</div>`
-
-        if (para.choices && para.choices.length > 0) {
-          const sd = document.createElement("div"); sd.className = "scelte"
-          para.choices.forEach(sc => {
-            // C++ serializza "target" (non "targetParagraph")
-            const dest = sc.target ?? sc.targetParagraph ?? "?"
-            const s = document.createElement("div"); s.className = "scelta"
-            s.innerHTML = `➜ ${sc.text || ""} <span class="scelta-link" data-target="${dest}">${tr("→ vai al paragrafo")} ${dest}</span>`
-            sd.appendChild(s)
-          })
-          card.appendChild(sd)
+        // 1. Controlla autenticazione
+        const { data: authData, error: authErr } = await client.auth.getUser()
+        if (authErr || !authData.user) {
+          window.location.href = "index.html"
+          return
         }
 
-        // C++ serializza "isEnding" (non "isEnding" già ok, ma verifica anche "is_ending")
-        if (para.isEnding || para.is_ending) {
-          const b = document.createElement("div"); b.className = "badge-fine"; b.textContent = "tr("⬥ Fine")"; card.appendChild(b)
+        // 2. Leggi ID progetto da localStorage
+        const progettoId = localStorage.getItem("desktop_project_id")
+        if (!progettoId) {
+          window.location.href = "app.html"
+          return
         }
-        c.appendChild(card)
-      })
 
-      c.addEventListener("click", e => {
-        const t = e.target.closest(".scelta-link")?.dataset?.target
-        if (!t) return
-        document.getElementById("para-" + t)?.scrollIntoView({ behavior: "smooth", block: "start" })
-      })
+        // 3. Carica il progetto da Supabase
+        const { data, error } = await client
+          .from("projects")
+          .select("*")
+          .eq("id", progettoId)
+          .single()
+
+        if (error) {
+          mostraErrore("Errore Supabase: " + error.message)
+          return
+        }
+        if (!data) {
+          mostraErrore("Progetto non trovato.")
+          return
+        }
+
+        // 4. Aggiorna titolo
+        document.getElementById("titolo-progetto").textContent = data.name
+        document.title = data.name
+
+        // 5. Estrai paragrafi dal campo JSONB
+        // Supabase restituisce JSONB già come oggetto JS — non serve JSON.parse
+        let paragrafi = []
+        const jsonData = data.data
+
+        if (!jsonData) {
+          mostraErrore("Il campo 'data' è vuoto per questo progetto.")
+          return
+        }
+
+        // Supporta sia oggetto diretto che stringa JSON
+        const parsed = (typeof jsonData === "string") ? JSON.parse(jsonData) : jsonData
+        paragrafi = parsed.paragraphs || []
+
+        // 6. Renderizza
+        const c = document.getElementById("contenuto")
+        c.innerHTML = ""
+
+        // Info box
+        const infoBox = document.createElement("div")
+        infoBox.className = "info-box"
+        let infoHtml = "<strong>📖 " + data.name + "</strong>"
+        if (data.author)      infoHtml += "<span>Autore: <b>" + data.author + "</b>"
+        if (data.description) infoHtml += (data.author ? " &nbsp;·&nbsp; " : "<span>") + data.description
+        if (data.author || data.description) infoHtml += "</span>"
+        infoBox.innerHTML = infoHtml
+        c.appendChild(infoBox)
+
+        if (paragrafi.length === 0) {
+          c.innerHTML += "<p class='msg'>" + tr("Questo progetto non ha ancora paragrafi.") + "</p>"
+          return
+        }
+
+        // Paragrafi
+        paragrafi.forEach(para => {
+          const card = document.createElement("div")
+          card.className = "para-card"
+          card.id = "para-" + para.number
+
+          const num = document.createElement("div")
+          num.className = "para-num"
+          num.textContent = tr("Paragrafo") + " " + para.number
+
+          const titolo = document.createElement("h2")
+          titolo.className = "para-title"
+          titolo.textContent = para.title || ""
+
+          const testo = document.createElement("div")
+          testo.className = "para-text"
+          testo.textContent = para.content || ""
+
+          card.appendChild(num)
+          card.appendChild(titolo)
+          card.appendChild(testo)
+
+          // Scelte (la C++ usa "target", non "targetParagraph")
+          if (para.choices && para.choices.length > 0) {
+            const scelteDiv = document.createElement("div")
+            scelteDiv.className = "scelte"
+            para.choices.forEach(sc => {
+              const dest = sc.target !== undefined ? sc.target : sc.targetParagraph
+              const scelta = document.createElement("div")
+              scelta.className = "scelta"
+              scelta.innerHTML = "➜ " + (sc.text || "")
+                + ' <span class="scelta-link" data-target="' + dest + '">'
+                + tr("→ vai al paragrafo") + " " + dest + "</span>"
+              scelteDiv.appendChild(scelta)
+            })
+            card.appendChild(scelteDiv)
+          }
+
+          // Fine
+          if (para.isEnding || para.is_ending) {
+            const badge = document.createElement("div")
+            badge.className = "badge-fine"
+            badge.textContent = tr("⬥ Fine")
+            card.appendChild(badge)
+          }
+
+          c.appendChild(card)
+        })
+
+        // Click su link scelte → scroll al paragrafo
+        c.addEventListener("click", e => {
+          const link = e.target.closest(".scelta-link")
+          if (!link) return
+          const target = document.getElementById("para-" + link.dataset.target)
+          if (target) target.scrollIntoView({ behavior: "smooth", block: "start" })
+        })
+
+      } catch (err) {
+        mostraErrore("Errore imprevisto: " + err.message)
+        console.error(err)
+      }
     }
 
     init()
