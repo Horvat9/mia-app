@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Editor Progetto</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* ── Layout editor ──────────────────────────────────────────── */
+    .editor-wrap { display:flex; height:calc(100vh - 56px); overflow:hidden; }
+
+    /* Sidebar paragrafi */
+    .sidebar-para { width:240px; min-width:200px; border-right:1px solid var(--bordo,#e0e0e0);
+      display:flex; flex-direction:column; overflow:hidden; background:var(--sfondo-sidebar,#f9f9fb); }
+    .sidebar-para h3 { padding:12px 16px; margin:0; font-size:.85rem; font-weight:700;
+      text-transform:uppercase; letter-spacing:.05em; color:#888; border-bottom:1px solid var(--bordo,#e0e0e0); }
+    .sidebar-list { flex:1; overflow-y:auto; padding:8px; }
+    .para-item { padding:9px 12px; border-radius:8px; cursor:pointer; font-size:.9rem;
+      border:1px solid transparent; margin-bottom:4px; transition:.15s; }
+    .para-item:hover { background:var(--sfondo-hover,#ededf5); }
+    .para-item.attivo { background:#6366f1; color:#fff; border-color:#6366f1; }
+    .para-item .para-item-num { font-size:.72rem; opacity:.7; }
+    .btn-nuovo-para { margin:10px; padding:9px; border-radius:8px; background:#6366f1;
+      color:#fff; border:none; cursor:pointer; font-size:.88rem; font-weight:600; width:calc(100% - 20px); }
+    .btn-nuovo-para:hover { background:#4f46e5; }
+
+    /* Area editor */
+    .editor-main { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+    .editor-body { flex:1; overflow-y:auto; padding:24px 32px; }
+    .editor-placeholder { display:flex; align-items:center; justify-content:center;
+      height:100%; color:#aaa; font-size:1rem; }
+
+    /* Campi */
+    .field-group { margin-bottom:18px; }
+    .field-group label { display:block; font-size:.8rem; font-weight:600; color:#888;
+      text-transform:uppercase; letter-spacing:.05em; margin-bottom:6px; }
+    .field-group input, .field-group textarea {
+      width:100%; padding:10px 14px; border:1px solid var(--bordo,#ddd);
+      border-radius:8px; font-size:.95rem; background:var(--sfondo-input,#fff);
+      color:var(--testo,#222); resize:vertical; box-sizing:border-box; }
+    .field-group textarea { min-height:160px; line-height:1.6; }
+    .field-group input:focus, .field-group textarea:focus
+      { outline:none; border-color:#6366f1; box-shadow:0 0 0 3px rgba(99,102,241,.15); }
+    .checkbox-row { display:flex; align-items:center; gap:8px; font-size:.9rem; }
+    .checkbox-row input[type=checkbox] { width:16px; height:16px; accent-color:#6366f1; }
+
+    /* Scelte */
+    .scelte-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+    .scelte-header span { font-size:.8rem; font-weight:600; color:#888; text-transform:uppercase; letter-spacing:.05em; }
+    .btn-add-scelta { padding:5px 12px; background:#6366f1; color:#fff; border:none;
+      border-radius:6px; cursor:pointer; font-size:.82rem; font-weight:600; }
+    .scelta-row { display:flex; gap:8px; align-items:flex-start; margin-bottom:8px;
+      background:var(--sfondo-hover,#f3f4f6); padding:10px 12px; border-radius:8px; }
+    .scelta-row input { flex:1; padding:7px 10px; border:1px solid var(--bordo,#ddd);
+      border-radius:6px; font-size:.88rem; background:var(--sfondo-input,#fff); color:var(--testo,#222); }
+    .scelta-row input.num { width:72px; flex:none; text-align:center; }
+    .btn-del-scelta { padding:6px 10px; background:#fee2e2; color:#dc2626; border:none;
+      border-radius:6px; cursor:pointer; font-size:.85rem; font-weight:700; flex-shrink:0; }
+    .btn-del-scelta:hover { background:#fca5a5; }
+
+    /* Footer azioni */
+    .editor-footer { padding:12px 32px; border-top:1px solid var(--bordo,#e0e0e0);
+      display:flex; gap:10px; align-items:center; background:var(--sfondo,#fff); }
+    .btn-salva { padding:9px 24px; background:#6366f1; color:#fff; border:none;
+      border-radius:8px; cursor:pointer; font-size:.92rem; font-weight:600; }
+    .btn-salva:hover { background:#4f46e5; }
+    .btn-elimina-para { padding:9px 18px; background:#fee2e2; color:#dc2626; border:none;
+      border-radius:8px; cursor:pointer; font-size:.88rem; font-weight:600; }
+    .btn-elimina-para:hover { background:#fca5a5; }
+    .stato-salv { font-size:.85rem; color:#888; margin-left:auto; }
+    .stato-salv.ok { color:#16a34a; font-weight:600; }
+    .stato-salv.err { color:#dc2626; font-weight:600; }
+
+    body.dark .field-group input, body.dark .field-group textarea,
+    body.dark .scelta-row input { background:#2a2a3e; border-color:#444; color:#eee; }
+    body.dark .scelta-row { background:#1e1e2e; }
+    body.dark .sidebar-para { background:#18182a; }
+    body.dark .editor-footer { background:#18182a; }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <div class="header">
+    <div class="header-sx">
+      <button id="btn-indietro">← Progetti</button>
+      <h1 id="titolo-progetto">Caricamento...</h1>
+    </div>
+    <div class="header-dx">
+      <div id="lang-container"></div>
+      <span id="stato-cloud" style="font-size:.82rem;color:#aaa;margin-right:8px"></span>
+      <button class="btn-darkmode" id="btn-darkmode">🌙</button>
+      <button id="btn-logout">Esci</button>
+    </div>
+  </div>
+
+  <!-- Editor layout -->
+  <div class="editor-wrap">
+    <!-- Sidebar paragrafi -->
+    <div class="sidebar-para">
+      <h3 id="lbl-paragrafi">Paragrafi</h3>
+      <div class="sidebar-list" id="sidebar-list"></div>
+      <button class="btn-nuovo-para" id="btn-nuovo-para">+ Nuovo paragrafo</button>
+    </div>
+
+    <!-- Area editor -->
+    <div class="editor-main">
+      <div class="editor-body" id="editor-body">
+        <div class="editor-placeholder" id="placeholder">
+          ← Seleziona un paragrafo o creane uno nuovo
+        </div>
+        <div id="editor-form" style="display:none">
+          <div class="field-group">
+            <label id="lbl-numero">Numero paragrafo</label>
+            <input type="number" id="inp-numero" min="1" />
+          </div>
+          <div class="field-group">
+            <label id="lbl-titolo">Titolo</label>
+            <input type="text" id="inp-titolo" />
+          </div>
+          <div class="field-group">
+            <label id="lbl-contenuto">Contenuto</label>
+            <textarea id="inp-contenuto"></textarea>
+          </div>
+          <div class="field-group">
+            <div class="checkbox-row">
+              <input type="checkbox" id="inp-fine" />
+              <label for="inp-fine" id="lbl-fine">È un finale</label>
+            </div>
+          </div>
+          <div class="field-group">
+            <div class="scelte-header">
+              <span id="lbl-scelte">Scelte</span>
+              <button class="btn-add-scelta" id="btn-add-scelta">+ Aggiungi scelta</button>
+            </div>
+            <div id="scelte-list"></div>
+          </div>
+        </div>
+      </div>
+      <div class="editor-footer" id="editor-footer" style="display:none">
+        <button class="btn-salva" id="btn-salva">💾 Salva paragrafo</button>
+        <button class="btn-elimina-para" id="btn-elimina-para">🗑️ Elimina</button>
+        <span class="stato-salv" id="stato-salv"></span>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="darkmode.js"></script>
+  <script src="i18n.js"></script>
+  <script>
+    const SUPABASE_URL = "https://zpoqbwmgubfqphscngaz.supabase.co"
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpwb3Fid21ndWJmcXBoc2NuZ2F6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMxMzIyNTEsImV4cCI6MjA4ODcwODI1MX0.Sv0ImWp-OUBB5DpmST2ZeLvuYl50cY60kdt7pwDC5vg"
+    const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
+
+    I18n.init("lang-container")
+
+    // ── Stato globale ────────────────────────────────────────────────────────────
+    let progettoId   = null
+    let progetto     = null   // oggetto completo da Supabase
+    let paragrafi    = []     // array paragrafi (modificabile)
+    let paraCorrente = null   // indice nell'array paragrafi
+    let autosaveTimer = null
+
+    // ── Buttons ──────────────────────────────────────────────────────────────────
+    document.getElementById("btn-indietro").onclick = () => { window.location.href = "app.html" }
+    document.getElementById("btn-logout").onclick   = async () => { await client.auth.signOut(); window.location.href = "index.html" }
+    document.getElementById("btn-nuovo-para").onclick   = nuovoParagrafo
+    document.getElementById("btn-add-scelta").onclick   = aggiungiScelta
+    document.getElementById("btn-salva").onclick        = salvaParagrafo
+    document.getElementById("btn-elimina-para").onclick = eliminaParagrafo
+
+    // ── Init ─────────────────────────────────────────────────────────────────────
+    async function init() {
+      try {
+        const { data: authData } = await client.auth.getUser()
+        if (!authData.user) { window.location.href = "index.html"; return }
+
+        progettoId = localStorage.getItem("desktop_project_id")
+        if (!progettoId) { window.location.href = "app.html"; return }
+
+        const { data, error } = await client.from("projects").select("*").eq("id", progettoId).single()
+        if (error || !data) { alert("Progetto non trovato: " + (error?.message || "")); window.location.href = "app.html"; return }
+
+        progetto = data
+        document.getElementById("titolo-progetto").textContent = data.name
+        document.title = "Editor: " + data.name
+
+        const jsonData = (typeof data.data === "string") ? JSON.parse(data.data) : (data.data || {})
+        paragrafi = jsonData.paragraphs || []
+
+        renderSidebar()
+      } catch(e) {
+        alert("Errore: " + e.message)
+        console.error(e)
+      }
+    }
+
+    // ── Sidebar ──────────────────────────────────────────────────────────────────
+    function renderSidebar() {
+      const list = document.getElementById("sidebar-list")
+      list.innerHTML = ""
+      const sorted = [...paragrafi].sort((a, b) => a.number - b.number)
+      sorted.forEach(para => {
+        const item = document.createElement("div")
+        item.className = "para-item" + (paraCorrente === para.number ? " attivo" : "")
+        item.innerHTML = '<div class="para-item-num">§ ' + para.number + '</div>'
+                       + '<div>' + (para.title || "(senza titolo)") + '</div>'
+        item.onclick = () => apriParagrafo(para.number)
+        list.appendChild(item)
+      })
+      if (paragrafi.length === 0) {
+        list.innerHTML = "<p style='padding:12px;color:#aaa;font-size:.85rem'>Nessun paragrafo. Creane uno!</p>"
+      }
+    }
+
+    // ── Apri paragrafo ───────────────────────────────────────────────────────────
+    function apriParagrafo(numero) {
+      const para = paragrafi.find(p => p.number === numero)
+      if (!para) return
+      paraCorrente = numero
+
+      document.getElementById("placeholder").style.display = "none"
+      document.getElementById("editor-form").style.display = "block"
+      document.getElementById("editor-footer").style.display = "flex"
+
+      document.getElementById("inp-numero").value   = para.number
+      document.getElementById("inp-titolo").value   = para.title   || ""
+      document.getElementById("inp-contenuto").value = para.content || ""
+      document.getElementById("inp-fine").checked   = !!(para.isEnding || para.is_ending)
+
+      renderScelte(para.choices || [])
+      renderSidebar()
+      document.getElementById("stato-salv").textContent = ""
+    }
+
+    // ── Scelte ───────────────────────────────────────────────────────────────────
+    function renderScelte(choices) {
+      const list = document.getElementById("scelte-list")
+      list.innerHTML = ""
+      choices.forEach((sc, idx) => {
+        const row = document.createElement("div")
+        row.className = "scelta-row"
+        row.innerHTML =
+          '<input type="text"  class="sc-testo" placeholder="Testo scelta..." value="' + escHtml(sc.text || "") + '" />'
+        + '<input type="number" class="sc-target num" placeholder="→ n°" value="' + (sc.target !== undefined ? sc.target : (sc.targetParagraph || "")) + '" min="1" />'
+        + '<button class="btn-del-scelta" data-idx="' + idx + '">✕</button>'
+        row.querySelector(".btn-del-scelta").onclick = () => {
+          row.remove()
+        }
+        list.appendChild(row)
+      })
+    }
+
+    function leggiScelte() {
+      return [...document.querySelectorAll(".scelta-row")].map(row => ({
+        text:   row.querySelector(".sc-testo").value,
+        target: parseInt(row.querySelector(".sc-target").value) || 1
+      }))
+    }
+
+    function aggiungiScelta() {
+      const list = document.getElementById("scelte-list")
+      const row = document.createElement("div")
+      row.className = "scelta-row"
+      row.innerHTML =
+        '<input type="text"   class="sc-testo"  placeholder="Testo scelta..." />'
+      + '<input type="number" class="sc-target num" placeholder="→ n°" min="1" />'
+      + '<button class="btn-del-scelta">✕</button>'
+      row.querySelector(".btn-del-scelta").onclick = () => row.remove()
+      list.appendChild(row)
+      row.querySelector(".sc-testo").focus()
+    }
+
+    // ── Nuovo paragrafo ──────────────────────────────────────────────────────────
+    function nuovoParagrafo() {
+      const nums = paragrafi.map(p => p.number)
+      const nuovoNum = nums.length > 0 ? Math.max(...nums) + 1 : 1
+      const para = { number: nuovoNum, title: "", content: "", isEnding: false, choices: [], nodeX: 100, nodeY: 100 }
+      paragrafi.push(para)
+      renderSidebar()
+      apriParagrafo(nuovoNum)
+    }
+
+    // ── Salva paragrafo ──────────────────────────────────────────────────────────
+    async function salvaParagrafo() {
+      const stato = document.getElementById("stato-salv")
+      stato.textContent = "Salvataggio..."
+      stato.className = "stato-salv"
+
+      try {
+        const nuovoNum  = parseInt(document.getElementById("inp-numero").value) || paraCorrente
+        const titolo    = document.getElementById("inp-titolo").value.trim()
+        const contenuto = document.getElementById("inp-contenuto").value
+        const fine      = document.getElementById("inp-fine").checked
+        const scelte    = leggiScelte()
+
+        // Aggiorna nell'array
+        const idx = paragrafi.findIndex(p => p.number === paraCorrente)
+        if (idx === -1) { stato.textContent = "Paragrafo non trovato"; stato.className = "stato-salv err"; return }
+
+        paragrafi[idx] = {
+          ...paragrafi[idx],
+          number:   nuovoNum,
+          title:    titolo,
+          content:  contenuto,
+          isEnding: fine,
+          choices:  scelte
+        }
+        paraCorrente = nuovoNum
+
+        // Salva su Supabase
+        await salvaProgetto()
+
+        stato.textContent = "✅ Salvato"
+        stato.className = "stato-salv ok"
+        setTimeout(() => { stato.textContent = ""; stato.className = "stato-salv" }, 2500)
+
+        renderSidebar()
+      } catch(e) {
+        stato.textContent = "❌ " + e.message
+        stato.className = "stato-salv err"
+        console.error(e)
+      }
+    }
+
+    // ── Elimina paragrafo ────────────────────────────────────────────────────────
+    async function eliminaParagrafo() {
+      if (!confirm("Eliminare il paragrafo " + paraCorrente + "?")) return
+      paragrafi = paragrafi.filter(p => p.number !== paraCorrente)
+      paraCorrente = null
+
+      document.getElementById("editor-form").style.display = "none"
+      document.getElementById("editor-footer").style.display = "none"
+      document.getElementById("placeholder").style.display = "flex"
+
+      await salvaProgetto()
+      renderSidebar()
+    }
+
+    // ── Salva l'intero progetto su Supabase ──────────────────────────────────────
+    async function salvaProgetto() {
+      // Ricostruisce il JSON data mantenendo gli altri campi (stats, nextParagraphNum, ecc.)
+      const oldData = (typeof progetto.data === "string") ? JSON.parse(progetto.data) : (progetto.data || {})
+      const nuovoData = {
+        ...oldData,
+        name:             progetto.name,
+        paragraphs:       paragrafi,
+        nextParagraphNum: Math.max(...paragrafi.map(p => p.number), 0) + 1
+      }
+
+      const { error } = await client
+        .from("projects")
+        .update({ data: nuovoData })
+        .eq("id", progettoId)
+
+      if (error) throw new Error(error.message)
+
+      progetto.data = nuovoData
+      document.getElementById("stato-cloud").textContent = "☁️ Salvato"
+      setTimeout(() => { document.getElementById("stato-cloud").textContent = "" }, 2000)
+    }
+
+    // ── Helper ───────────────────────────────────────────────────────────────────
+    function escHtml(s) {
+      return s.replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+    }
+
+    init()
+  </script>
+</body>
+</html>

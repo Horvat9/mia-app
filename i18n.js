@@ -327,3 +327,41 @@ const I18n = {
 // Espone globalmente
 window.I18n = I18n
 window.tr = (key) => I18n.tr(key)
+
+// Stringhe aggiuntive editor desktop
+TRANSLATIONS["Modifica"] = {
+  it:"Modifica", en:"Edit", fr:"Modifier", es:"Editar",
+  pt:"Editar", de:"Bearbeiten", ja:"編集", zh:"编辑"
+}
+TRANSLATIONS["Paragrafi"] = {
+  it:"Paragrafi", en:"Paragraphs", fr:"Paragraphes", es:"Párrafos",
+  pt:"Parágrafos", de:"Absätze", ja:"段落", zh:"段落"
+}
+TRANSLATIONS["+ Nuovo paragrafo"] = {
+  it:"+ Nuovo paragrafo", en:"+ New paragraph", fr:"+ Nouveau paragraphe",
+  es:"+ Nuevo párrafo", pt:"+ Novo parágrafo", de:"+ Neuer Absatz",
+  ja:"+ 新しい段落", zh:"+ 新段落"
+}
+TRANSLATIONS["Numero paragrafo"] = {
+  it:"Numero paragrafo", en:"Paragraph number", fr:"Numéro du paragraphe",
+  es:"Número de párrafo", pt:"Número do parágrafo", de:"Absatznummer",
+  ja:"段落番号", zh:"段落编号"
+}
+TRANSLATIONS["È un finale"] = {
+  it:"È un finale", en:"Is an ending", fr:"Est une fin", es:"Es un final",
+  pt:"É um final", de:"Ist ein Ende", ja:"エンディングです", zh:"是结局"
+}
+TRANSLATIONS["Scelte"] = {
+  it:"Scelte", en:"Choices", fr:"Choix", es:"Opciones",
+  pt:"Escolhas", de:"Optionen", ja:"選択肢", zh:"选项"
+}
+TRANSLATIONS["+ Aggiungi scelta"] = {
+  it:"+ Aggiungi scelta", en:"+ Add choice", fr:"+ Ajouter un choix",
+  es:"+ Añadir opción", pt:"+ Adicionar escolha", de:"+ Option hinzufügen",
+  ja:"+ 選択肢を追加", zh:"+ 添加选项"
+}
+TRANSLATIONS["💾 Salva paragrafo"] = {
+  it:"💾 Salva paragrafo", en:"💾 Save paragraph", fr:"💾 Sauvegarder",
+  es:"💾 Guardar párrafo", pt:"💾 Salvar parágrafo", de:"💾 Speichern",
+  ja:"💾 保存", zh:"💾 保存"
+}

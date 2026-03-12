@@ -180,6 +180,15 @@ function creaCardDesktop(p) {
     window.location.href = "progetto_desktop.html"
   })
 
+  const btnModifica = document.createElement("button")
+  btnModifica.textContent = "✏️ Modifica"
+  btnModifica.className = "btn-apri"
+  btnModifica.style.cssText = "background:#4f46e5;margin-left:4px"
+  btnModifica.addEventListener("click", () => {
+    localStorage.setItem("desktop_project_id", p.id)
+    window.location.href = "editor_desktop.html"
+  })
+
   const btnElimina = document.createElement("button")
   btnElimina.textContent = "🗑️"
   btnElimina.className = "btn-elimina"
@@ -190,6 +199,7 @@ function creaCardDesktop(p) {
   azioni.appendChild(badge)
   azioni.appendChild(info)
   azioni.appendChild(btnApri)
+  azioni.appendChild(btnModifica)
   azioni.appendChild(btnElimina)
 
   card.appendChild(titolo)
