@@ -18,60 +18,87 @@ async function init() {
 }
 
 // =============================================
-// 2. CARICA TUTTI I PROGETTI DELL'UTENTE
+// 2. CARICA TUTTI I PROGETTI
+//    — progetti (web app)
+//    — projects  (GameBook Studio desktop/mobile)
 // =============================================
 async function caricaProgetti() {
   const { data: { user } } = await client.auth.getUser()
 
-  // Carica i progetti dell'utente
-  const { data: miei, error: err1 } = await client
+  // Progetti web app
+  const { data: miei } = await client
     .from("progetti")
     .select("*, capitoli(count)")
     .eq("user_id", user.id)
     .order("creato_il", { ascending: false })
 
-  // Carica i progetti dove è collaboratore
-  const { data: collab, error: err2 } = await client
+  // Progetti collaborati
+  const { data: collab } = await client
     .from("collaboratori")
     .select("*, progetti(*, capitoli(count))")
     .eq("user_id", user.id)
 
-  if (err1 || err2) { console.log(err1?.message || err2?.message); return }
+  // Progetti GameBook Studio (C++ / iOS)
+  const { data: desktopProj } = await client
+    .from("projects")
+    .select("*")
+    .eq("user_id", user.id)
+    .order("updated_at", { ascending: false })
 
   const lista = document.getElementById("lista-progetti")
   lista.innerHTML = ""
 
-  // Unisce i due array evitando duplicati
-  const tuttiProgetti = [...(miei || [])]
-
+  // ── Sezione progetti web ─────────────────────────────────
+  const tuttiWeb = [...(miei || [])]
   collab?.forEach(c => {
-    if (!tuttiProgetti.find(p => p.id === c.progetti.id)) {
-      tuttiProgetti.push({ ...c.progetti, ruolo: c.ruolo })
+    if (!tuttiWeb.find(p => p.id === c.progetti.id)) {
+      tuttiWeb.push({ ...c.progetti, ruolo: c.ruolo })
     }
   })
 
-  if (tuttiProgetti.length === 0) {
+  // ── Sezione progetti desktop/mobile ──────────────────────
+  const desktop = desktopProj || []
+
+  if (tuttiWeb.length === 0 && desktop.length === 0) {
     lista.innerHTML = "<p class='vuoto'>Nessun progetto ancora. Creane uno! 🚀</p>"
     return
   }
 
-  tuttiProgetti.forEach(progetto => {
-    const card = creaCardProgetto(progetto)
+  // Progetti web app
+  if (tuttiWeb.length > 0) {
+    const intestazione = document.createElement("h3")
+    intestazione.className = "sezione-titolo"
+    intestazione.textContent = "📝 Progetti Web"
+    lista.appendChild(intestazione)
 
-    // Se è un progetto condiviso aggiungi un badge
-    if (progetto.ruolo) {
-      const badge = document.createElement("span")
-      badge.className = "badge-condiviso"
-      badge.textContent = progetto.ruolo === "editor" ? "✏️ Condiviso" : "👁️ Sola lettura"
-      card.querySelector(".card-azioni").prepend(badge)
-    }
+    tuttiWeb.forEach(progetto => {
+      const card = creaCardProgetto(progetto)
+      if (progetto.ruolo) {
+        const badge = document.createElement("span")
+        badge.className = "badge-condiviso"
+        badge.textContent = progetto.ruolo === "editor" ? "✏️ Condiviso" : "👁️ Sola lettura"
+        card.querySelector(".card-azioni").prepend(badge)
+      }
+      lista.appendChild(card)
+    })
+  }
 
-    lista.appendChild(card)
-  })
+  // Progetti GameBook Studio
+  if (desktop.length > 0) {
+    const intestazione = document.createElement("h3")
+    intestazione.className = "sezione-titolo"
+    intestazione.textContent = "🖥️ Progetti GameBook Studio"
+    lista.appendChild(intestazione)
+
+    desktop.forEach(p => {
+      const card = creaCardDesktop(p)
+      lista.appendChild(card)
+    })
+  }
 }
 
 // =============================================
-// 3. CREA LA CARD DI UN PROGETTO
+// 3. CARD PROGETTO WEB
 // =============================================
 function creaCardProgetto(progetto) {
   const card = document.createElement("div")
@@ -113,24 +140,65 @@ function creaCardProgetto(progetto) {
   card.appendChild(titolo)
   card.appendChild(desc)
   card.appendChild(azioni)
-
   return card
 }
 
 // =============================================
-// 4. CREA UN NUOVO PROGETTO
+// 4. CARD PROGETTO DESKTOP (GameBook Studio)
+// =============================================
+function creaCardDesktop(p) {
+  const card = document.createElement("div")
+  card.className = "card-progetto card-desktop"
+
+  const titolo = document.createElement("h3")
+  titolo.textContent = "📱 " + p.name
+
+  const desc = document.createElement("p")
+  desc.className = "card-desc"
+  desc.textContent = p.description || "Nessuna descrizione"
+
+  // Conta i paragrafi dal campo data JSONB
+  let numParagrafi = 0
+  try {
+    const data = typeof p.data === "string" ? JSON.parse(p.data) : p.data
+    numParagrafi = data?.paragraphs?.length || 0
+  } catch(e) {}
+
+  const info = document.createElement("span")
+  info.className = "card-info"
+  info.textContent = numParagrafi + (numParagrafi === 1 ? " paragrafo" : " paragrafi")
+
+  const badge = document.createElement("span")
+  badge.className = "badge-condiviso"
+  badge.textContent = "🖥️ GameBook Studio"
+
+  const btnElimina = document.createElement("button")
+  btnElimina.textContent = "🗑️"
+  btnElimina.className = "btn-elimina"
+  btnElimina.addEventListener("click", () => eliminaDesktop(p.id))
+
+  const azioni = document.createElement("div")
+  azioni.className = "card-azioni"
+  azioni.appendChild(badge)
+  azioni.appendChild(info)
+  azioni.appendChild(btnElimina)
+
+  card.appendChild(titolo)
+  card.appendChild(desc)
+  card.appendChild(azioni)
+  return card
+}
+
+// =============================================
+// 5. CREA NUOVO PROGETTO WEB
 // =============================================
 document.getElementById("btn-crea").addEventListener("click", async function() {
   const titolo = document.getElementById("input-titolo").value.trim()
   const descrizione = document.getElementById("input-descrizione").value.trim()
 
-  if (titolo === "") {
-    mostraMessaggio("Inserisci almeno il titolo!", "errore")
-    return
-  }
+  if (titolo === "") { mostraMessaggio("Inserisci almeno il titolo!", "errore"); return }
 
   const { data: { user } } = await client.auth.getUser()
-
   const { error } = await client
     .from("progetti")
     .insert({ titolo, descrizione, user_id: user.id })
@@ -147,7 +215,7 @@ document.getElementById("btn-crea").addEventListener("click", async function() {
 })
 
 // =============================================
-// 5. ELIMINA UN PROGETTO
+// 6. ELIMINA PROGETTO
 // =============================================
 async function eliminaProgetto(id) {
   if (!confirm("Sei sicuro? Eliminerai anche tutti i capitoli!")) return
@@ -155,8 +223,14 @@ async function eliminaProgetto(id) {
   if (!error) caricaProgetti()
 }
 
+async function eliminaDesktop(id) {
+  if (!confirm("Elimina questo progetto da GameBook Studio?")) return
+  const { error } = await client.from("projects").delete().eq("id", id)
+  if (!error) caricaProgetti()
+}
+
 // =============================================
-// 6. LOGOUT
+// 7. LOGOUT
 // =============================================
 document.getElementById("btn-logout").addEventListener("click", async function() {
   await client.auth.signOut()
@@ -164,7 +238,7 @@ document.getElementById("btn-logout").addEventListener("click", async function()
 })
 
 // =============================================
-// 7. MESSAGGI
+// 8. MESSAGGI
 // =============================================
 function mostraMessaggio(testo, tipo) {
   const box = document.getElementById("messaggio")
@@ -181,11 +255,10 @@ function mostraMessaggio(testo, tipo) {
 }
 
 // =============================================
-// 8. INVITI RICEVUTI
+// 9. INVITI RICEVUTI
 // =============================================
 async function caricaInvitiRicevuti() {
   const { data: { user } } = await client.auth.getUser()
-
   const { data, error } = await client
     .from("inviti")
     .select("*, progetti(titolo)")

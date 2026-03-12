@@ -1433,3 +1433,20 @@ body.dark .form input {
 
 body.dark .footer { border-top-color: #2d2d4e; color: #4b5563; }
 body.dark .footer strong { color: #818cf8; }
+/* ── Sezioni progetti ────────────────────────────────────────── */
+.sezione-titolo {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--testo-secondario, #666);
+    margin: 24px 0 10px 0;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--bordo, #e0e0e0);
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+}
+
+/* Card progetti GameBook Studio desktop */
+.card-desktop {
+    border-left: 4px solid #6366f1;
+    opacity: 0.92;
+}
